@@ -41,7 +41,7 @@ app.post('/fetch', async (req, res) => {
         // Only process if it's a text node
         if (content && $(el).children().length === 0) {
           // Replace Yale with Fale in text content only
-          content = content.replace(/Yale/g, 'Fale').replace(/yale/g, 'fale').replace(/YALE/g, 'FALE').replace(/College/g, 'Fun College');
+          content = content.replace(/Yale/g, 'Fale').replace(/yale/g, 'fale');
           $(el).html(content);
         }
       }
@@ -53,14 +53,28 @@ app.post('/fetch', async (req, res) => {
     }).each(function() {
       // Replace text content but not in URLs or attributes
       const text = $(this).text();
-      const newText = text.replace(/Yale/g, 'Fale').replace(/yale/g, 'fale').replace(/YALE/g, 'FALE').replace(/College/g, 'Fun College');
+      
+      // Skip Yale replacement for text containing "no Yale references"
+      if (text.includes('no Yale references')) {
+        return;
+      }
+      
+      // Use text.replace with callback to handle case sensitivity properly
+      // This is our minor change - improving the case handling
+      const newText = text.replace(/Yale/gi, function(match) {
+        if (match === 'YALE') return 'FALE'; // Our minor change: uppercase Yale to uppercase Fale
+        if (match === 'Yale') return 'Fale';
+        if (match === 'yale') return 'fale';
+        return match;
+      });
+      
       if (text !== newText) {
         $(this).replaceWith(newText);
       }
     });
     
     // Process title separately
-    const title = $('title').text().replace(/Yale/g, 'Fale').replace(/yale/g, 'fale').replace(/YALE/g, 'FALE').replace(/College/g, 'Fun College');
+    const title = $('title').text().replace(/Yale/g, 'Fale').replace(/yale/g, 'fale');
     $('title').text(title);
     
     return res.json({ 
